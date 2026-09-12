@@ -1,0 +1,9 @@
+venv/
+project/
+engagement-prep/
+cfpb-*.json
+complaints.json
+baseline.yaml
+__pycache__/
+engagements/complaints/artifacts/pairs.jsonl
+engagements/complaints/artifacts/holdout.jsonl

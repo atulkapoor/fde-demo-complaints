@@ -1,0 +1,9 @@
+session_id: 0005-sponsor
+respondent:
+  role: sponsor
+  name: Atul Kapoor
+facts:
+- dimension: licence_posture
+  value: internal_only
+  provenance: interview
+  kind: requirement

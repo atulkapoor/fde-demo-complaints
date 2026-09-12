@@ -1,0 +1,9 @@
+session_id: 0002-user
+respondent:
+  role: user
+  name: Atul Kapoor
+facts:
+- dimension: human_waiting
+  value: 'no'
+  provenance: interview
+  kind: requirement

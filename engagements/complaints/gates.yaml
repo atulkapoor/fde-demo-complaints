@@ -1,0 +1,8 @@
+data_access:
+  note: sqlite complaints.db returned 2,034 real rows (CFPB narratives, redacted at
+    source)
+  at: '2026-09-11'
+security_review:
+  note: 'self-review for the public demo: local sqlite, no egress, tool calls behind
+    the governed boundary; a client engagement gets the client''s security function'
+  at: '2026-09-11'
