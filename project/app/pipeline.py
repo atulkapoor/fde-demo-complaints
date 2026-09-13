@@ -88,3 +88,48 @@ def run(payload):
     for name, step in STEPS:
         payload = step.run(payload)
     return payload
+
+
+# Backported from fde-framework 0.1.11: the deployment runs
+# `python -m app.pipeline`, and a module that defines functions and
+# exits is a service that dies silently. This is the service.
+if __name__ == "__main__":
+    import json as _json
+    import os as _os
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    from app.contract import RefusedInput
+
+    class _Handler(BaseHTTPRequestHandler):
+        def _send(self, code, body):
+            data = _json.dumps(body, default=str).encode()
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def do_GET(self):
+            if self.path == "/health":
+                self._send(200, {"status": "ok"})
+            else:
+                self._send(404, {"error": "POST / with a JSON payload"})
+
+        def do_POST(self):
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                payload = _json.loads(self.rfile.read(length) or b"null")
+            except ValueError:
+                self._send(400, {"error": "body is not JSON"})
+                return
+            try:
+                self._send(200, {"result": run(payload)})
+            except RefusedInput as refusal:
+                self._send(422, {"refused": str(refusal)})
+
+        def log_message(self, fmt, *args):
+            print(fmt % args)
+
+    port = int(_os.environ.get("PORT", "8080"))
+    print(f"serving on :{port} -- /health, POST /")
+    HTTPServer(("0.0.0.0", port), _Handler).serve_forever()

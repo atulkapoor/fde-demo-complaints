@@ -103,6 +103,35 @@ holdout: green (cases the implementer never saw)
 **Stopped by**: harness green.
 ```
 
+## Deployed and answering
+
+The question that found a framework bug: *has anyone actually run the
+deployment?* The systemd unit executes `python -m app.pipeline` — and
+until fde-framework 0.1.11, the emitted pipeline defined its functions
+and exited: a service dying silently on first start. Fixed upstream
+(the pipeline is now a stdlib HTTP service), backported here, and then
+run exactly as the unit would:
+
+```
+$ PORT=8091 python -m app.pipeline
+serving on :8091 -- /health, POST /
+
+$ curl -s http://127.0.0.1:8091/health
+{"status": "ok"}
+
+$ curl -s -X POST :8091/ -d '"I was charged twice for the same order in
+  March and the bank refuses to reverse the duplicate charge..."'
+{"result": {"decision": "Closed with explanation"}}
+
+$ curl -s -X POST :8091/ -d 'null'
+{"refused": "a complaint arrives as text, not NoneType"}   [422]
+```
+
+Note the honesty in both directions: a malformed payload is a 422 with
+the contract spelled out, and the first answer above is arguably the
+wrong decision (a duplicate charge leans monetary relief) — a 72.6%
+system behaving exactly like a 72.6% system, in production posture.
+
 ## Honesty notes
 
 - The 0.6 bar is deliberate: three-way decisions from redacted narrative
