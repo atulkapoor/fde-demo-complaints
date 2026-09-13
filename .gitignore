@@ -1,5 +1,7 @@
 venv/
-project/
+project/evals/golden.jsonl
+project/evals/edge_case.jsonl
+project/.implement/
 engagement-prep/
 cfpb-*.json
 complaints.json
