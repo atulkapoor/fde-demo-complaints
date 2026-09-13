@@ -59,6 +59,12 @@ venv/bin/fde implement project --holdout engagements/complaints/artifacts/holdou
   --max-rounds 6 --check "python evals/harness.py --min-score 0.6"
 ```
 
+**The deliverable itself is committed under [`project/`](project/)** — the
+emitted project at its green state: the decision pipeline, the governed
+tool boundary with approval gates, critics and the idempotency key,
+deploy assets, runbook and diagnosis walk. Only the case files
+regenerate (they embed complaint text).
+
 The recorded interviews, baseline, and implement round log are in this
 repository (`engagements/`, `implement-run.log`).
 
