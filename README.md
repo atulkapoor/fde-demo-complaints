@@ -62,6 +62,41 @@ venv/bin/fde implement project --holdout engagements/complaints/artifacts/holdou
 The recorded interviews, baseline, and implement round log are in this
 repository (`engagements/`, `implement-run.log`).
 
+## Transcripts, verbatim
+
+The exam refusing ambiguous ground truth, before any code existed:
+
+```
+complaint-041 and complaint-061 have the same input and disagree on ['decision'].
+That is a specification question for the client, not noise to average away.
+```
+
+The helping hand steering the middle of the engagement — every recording
+command ends by naming the move:
+
+```
+data access recorded
+next: fde baseline complaints --file baseline.yaml
+baseline recorded -- re-measurable, sampled, complete
+next: fde security-review complaints --note "who looked, at what"
+```
+
+And the framework's first fully green loop, holdout included, as the
+round log wrote it:
+
+```
+## Round 2
+
+- check: green
+
+metrics: field_exact_match, field_coverage
+  golden         84 cases  72.6%
+  adversarial     2 cases  100.0%
+holdout: green (cases the implementer never saw)
+
+**Stopped by**: harness green.
+```
+
 ## Honesty notes
 
 - The 0.6 bar is deliberate: three-way decisions from redacted narrative
