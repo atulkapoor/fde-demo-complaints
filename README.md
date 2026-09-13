@@ -113,7 +113,9 @@ holdout: green (cases the implementer never saw)
   the recorded baseline. The decision ground truth is real: the outcome
   the company actually recorded for each complaint.
 - CFPB narratives are published with PII redacted at source (the XXXX
-  blocks). This repository stores none of them; `prepare.py` pulls from
-  the public API.
+  blocks). The corpus is not included and regenerates via `prepare.py`;
+  a handful of narratives do appear inside the committed deliverable
+  (the adversarial probe and examples the agent chose) — public
+  US-government data, redacted at source.
 - One engagement on public data still is not a production engagement:
   the framework's status remains **built, demonstrated, unproven**.
