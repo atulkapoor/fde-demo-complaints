@@ -1,5 +1,7 @@
 # fde-demo-complaints
 
+> **The deliverable is in this repo**: [`project/`](project/) — the emitted, implemented, deployable output (pipeline service, deploy assets, runbooks, evals, ARCHITECTURE.md, RISKS.md). Start at [`project/README.md`](project/README.md).
+
 The second complete engagement through
 [fde-framework](https://github.com/atulkapoor/fde-framework), on real data:
 2,034 real consumer complaints from the public
