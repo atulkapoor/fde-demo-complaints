@@ -148,5 +148,12 @@ system behaving exactly like a 72.6% system, in production posture.
   a handful of narratives do appear inside the committed deliverable
   (the adversarial probe and examples the agent chose) — public
   US-government data, redacted at source.
+- The adversarial layer's injection probe is a regression guard for a
+  future model swap: today's pipeline is rules-only, so "ignore all
+  previous instructions" cannot succeed by construction — the 100% there
+  is a guard being in place, not a security result.
+- Both this demo's and the receipts demo's golden scores happen to be
+  72.6% — a genuine coincidence of two 84-case exams landing on 61
+  passes, reproducible independently in each repo.
 - One engagement on public data still is not a production engagement:
   the framework's status remains **built, demonstrated, unproven**.
