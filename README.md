@@ -70,6 +70,50 @@ regenerate (they embed complaint text).
 The recorded interviews, baseline, and implement round log are in this
 repository (`engagements/`, `implement-run.log`).
 
+## Built again on the 0.1.22 emitter (2026-09-18)
+
+The sixth audit pass read the 0.1.21 deliverable and refused to sign
+off the decision shape for reasons that were the generator's: a constant
+classifier could pass its CI, a text decision reached a constraint
+solver, thirty-six verified pairs had gone missing between the split and
+the shipped holdout with nothing to say so. 0.1.22 answered each as a
+check first, and the same engagement was built again -- this time from
+all 150 verified pairs handed to one split, as the audit asked. That
+build is under [`project-0.1.22/`](project-0.1.22/).
+
+What is different about this build, before any agent touches it:
+
+- **It ships a fitted classifier, not a scaffold.** `app/components/reasoning.py`
+  names the three labels, fits token log-odds on the golden set at
+  import, and decides with a per-label score. Its own scores, no agent
+  involved: golden **59.0%** against a majority rate of 43.8%, edge 75%,
+  holdout **55.6%** against a majority rate of 35.6% -- a baseline the
+  implement loop now has to beat rather than a blank to fill.
+- **The exam is wider and it steers.** 105 golden, 4 edge cases drawn
+  from the data's own extremes, 11 adversarial probes including two that
+  steer toward a wrong label. The shipped classifier followed one of
+  them (10/11), and the harness says so and exits red: the attack layer
+  found a taker. That is the exam doing its job on the reference
+  implementation.
+- **A constant answer is red.** The harness reports per-class precision,
+  recall and F1, the confusion and the majority rate, and refuses a
+  golden score that does not beat the majority.
+- **The exam is on the record.** `evals/manifest.json` and
+  `evals/acceptance.md` carry the split seed, the holdout share and the
+  SHA-256 of every eval file and of the engagement holdout. `fde samples`
+  announced the replaced holdout with both digests when the 150 pairs
+  went in; `fde implement` names a holdout that is not the recorded one.
+- **The sample assessment spoke.** One verified pair repeats an earlier
+  input exactly; thirteen inputs are exactly 3,000 characters long -- a
+  hard truncation upstream. Both are true of this dataset and both were
+  invisible before.
+
+The eval files of this build embed complaint narratives and are not
+committed (see `.gitignore`); they regenerate from `prepare.py` and a
+0.1.22 build. The implement loop has not yet been run against this
+build; when it is, the comparison to draw is against the classifier's
+own holdout figure above, not against a blank.
+
 ## Re-run on the 0.1.21 emitter (2026-09-18)
 
 The original deliverable under [`project/`](project/) is the measured

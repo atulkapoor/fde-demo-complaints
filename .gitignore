@@ -13,3 +13,10 @@ project-0.1.21/evals/golden.jsonl
 project-0.1.21/evals/edge_case.jsonl
 project-0.1.21/.implement/
 evals-0.1.22/*.jsonl
+project-0.1.22/evals/golden.jsonl
+project-0.1.22/evals/edge_case.jsonl
+project-0.1.22/evals/adversarial.jsonl
+project-0.1.22/.implement/
+project-0.1.22/harness-report.json
+project-0.1.22/holdout-report.json
+engagements/complaints/.last-out

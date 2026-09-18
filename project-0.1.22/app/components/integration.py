@@ -1,0 +1,228 @@
+"""integration: governed-tools, via plain-python.
+
+Governed tool boundary: external_systems > 1
+
+One entry point through which every outward call passes. Past the first system
+this stops being tidiness -- it is the only place authentication, authorisation
+and audit can be enforced once rather than per caller.
+
+**Annotations describe; this enforces.** A tool declares what it is --
+read-only, destructive, idempotent, reaching outside a closed world -- and those
+declarations shape how a call is framed to a person. They are the tool's own
+claim about itself, so nothing here trusts them as policy: an unregistered tool
+cannot be called at all, and a declaration that a call is safe does not make it
+so.
+
+**Destructive is assumed unless declared otherwise**, because the failure of
+guessing wrong in that direction is recoverable and the other is not.
+
+**Reversibility is a separate axis from destructiveness.** Moving something to
+a trash folder is destructive and reversible; deleting it permanently is both.
+Collapsing the two loses exactly the distinction that decides whether a critic
+is needed before the call.
+"""
+
+from __future__ import annotations
+
+import os
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any
+
+from app.contract import RefusedInput
+from app.ledger import LEDGER, redact
+
+
+class UnregisteredTool(LookupError):
+    """Called something the boundary does not know about.
+
+    Not a lookup miss to be handled quietly: the point of a single entry is that
+    nothing else has a way out, so this means something tried to route around it.
+    """
+
+
+class ScopeDenied(PermissionError):
+    """The caller's authority does not cover this tool."""
+
+
+@dataclass(frozen=True)
+class Tool:
+    """A declared capability.
+
+    The declarations mirror the tool-annotation vocabulary in general use, so a
+    client that understands them can frame a call sensibly. They are hints from
+    the tool about itself, and are never the thing that grants permission.
+    """
+
+    name: str
+    run: Callable[..., Any]
+    required_scope: str
+    input_schema: dict[str, Any] = field(default_factory=dict)
+
+    read_only: bool = False
+    # Assumed destructive. Guessing wrong this way costs a confirmation;
+    # guessing wrong the other way costs the data.
+    destructive: bool = True
+    idempotent: bool = False
+    # Reaches systems outside the closed world of this deployment.
+    open_world: bool = True
+    # Separate from destructive on purpose: trash is destructive and
+    # reversible, permanent deletion is destructive and not.
+    reversible: bool = False
+
+    @property
+    def mutative(self) -> bool:
+        """Whether this changes anything. What the autonomy gate keys on."""
+        return not self.read_only
+
+
+class Integration:
+    """ToolBoundary, as governed-tools."""
+
+    interface = "ToolBoundary"
+    approach = "governed-tools"
+    stack = "plain-python"
+
+    def __init__(self) -> None:
+        self._tools: dict[str, Tool] = {}
+        self.audit: list[dict[str, Any]] = []
+
+    def register(self, tool: Tool) -> None:
+        self._tools[tool.name] = tool
+
+    def call(
+        self,
+        name: str,
+        arguments: dict[str, Any],
+        *,
+        subject: str,
+        granted_scopes: set[str],
+        actor: str | None = None,
+        request_id: str | None = None,
+    ) -> Any:
+        """Make an outward call, or refuse to.
+
+        `subject` is the person the call is made for; `actor` is what made it.
+        The audit names the subject, because a record saying an agent issued a
+        refund has lost the chain that makes it useful.
+        """
+        tool = self._tools.get(name)
+        if tool is None:
+            # A denial is an outward-call attempt too: it goes on the record.
+            self._deny(name, subject, actor, request_id, "unregistered tool")
+            raise UnregisteredTool(
+                f"{name!r} is not registered; every outward call goes through here"
+            )
+
+        # Authority is checked here, against what the caller actually holds --
+        # never against what the tool says about itself.
+        if tool.required_scope not in granted_scopes:
+            self._deny(name, subject, actor, request_id, f"scope {tool.required_scope!r} not held")
+            raise ScopeDenied(
+                f"{name!r} needs {tool.required_scope!r}, which {subject} does not hold"
+            )
+
+        try:
+            self._validate(tool, arguments)
+        except RefusedInput as refusal:
+            self._deny(name, subject, actor, request_id, f"arguments refused: {refusal}")
+            raise
+        # A mutative call reserves its key BEFORE acting; the same action
+        # retried finds the key taken and returns the recorded outcome.
+        key = None
+        if tool.mutative:
+            action = {"tool": name, "arguments": arguments, "subject": subject}
+            key = LEDGER.key_for(action)
+            earlier = LEDGER.reserve(key, LEDGER.key_for(arguments))
+            if earlier is not None:
+                return {"result": earlier.get("outcome"), "duplicate": True, "key": key}
+        self._record("intent", tool, subject, actor, arguments, request_id=request_id)
+        try:
+            result = tool.run(**arguments)
+        except Exception as exc:
+            self._record("failed", tool, subject, actor, arguments,
+                         error=type(exc).__name__, request_id=request_id)
+            raise
+        self._record("outcome", tool, subject, actor, arguments, request_id=request_id)
+        if key is not None:
+            LEDGER.complete(key, result)
+        return {"result": result, "duplicate": False, "key": key}
+
+    def mutative_tools(self) -> list[str]:
+        """What needs a gate and an idempotency key."""
+        return sorted(n for n, t in self._tools.items() if t.mutative)
+
+    def irreversible_tools(self) -> list[str]:
+        """What needs a critic in front of it."""
+        return sorted(n for n, t in self._tools.items() if t.mutative and not t.reversible)
+
+    def run(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Envelope in, envelope out. A request that asks for no tool passes
+        untouched. One that does is authorised against the PRINCIPAL the
+        edge set -- never against scopes the body claims for itself."""
+        if "tool" not in payload:
+            return payload
+        principal = payload.get("principal") or {}
+        arguments = payload.get("arguments", {})
+        if not isinstance(arguments, dict):
+            raise RefusedInput("'arguments' must be an object")
+        result = self.call(
+            str(payload["tool"]),
+            arguments,
+            subject=str(principal.get("subject", "anonymous")),
+            granted_scopes=set(principal.get("scopes", [])),
+            actor="pipeline",
+            # Passed through, never stored on this shared instance: under
+            # eight workers a per-request attribute misattributed half the
+            # audit records to the wrong request.
+            request_id=payload.get("request_id"),
+        )
+        return {**payload, "integration": result}
+
+    def _validate(self, tool: Tool, arguments: dict[str, Any]) -> None:
+        """The declared input schema is enforced, not decorative: unknown
+        keys never reach a tool's keyword arguments from a request body."""
+        schema = tool.input_schema
+        if not schema or not isinstance(schema, dict):
+            return  # nothing declared, nothing to hold the call to
+        unknown = sorted(k for k in arguments if k not in schema)
+        missing = sorted(k for k in schema if k not in arguments)
+        if unknown or missing:
+            raise RefusedInput(
+                f"{tool.name!r}: unknown arguments {unknown}, missing {missing}"
+            )
+
+    def _deny(self, name, subject, actor, request_id, reason) -> None:
+        entry = {"phase": "denied", "tool": name, "subject": subject, "actor": actor,
+                 "request_id": request_id, "reason": reason}
+        self.audit.append(entry)
+        del self.audit[:-200]
+        LEDGER.append(entry)
+
+    def _record(self, phase, tool, subject, actor, arguments, error=None,
+                request_id=None) -> None:
+        # Argument VALUES are the business payload; on a build whose data
+        # may not leave they do not go to disk by default. A digest proves
+        # which call this was; AUDIT_ARGUMENTS=full opts into values, with
+        # sensitive-looking keys redacted.
+        if os.environ.get("AUDIT_ARGUMENTS") == "full":
+            recorded: Any = redact(arguments)
+        else:
+            recorded = {"keys": sorted(arguments), "digest": LEDGER.key_for(arguments)}
+        entry = {
+            "phase": phase,
+            "tool": tool.name,
+            # The human is the subject; the agent is the actor. Not the reverse.
+            "subject": subject,
+            "actor": actor,
+            "request_id": request_id,
+            "destructive": tool.destructive,
+            "reversible": tool.reversible,
+            "arguments": recorded,
+            "error": error,
+        }
+        # A bounded tail in memory for tests and diagnosis; the ledger under
+        # STATE_DIR is the record that survives the process.
+        self.audit.append(entry)
+        del self.audit[:-200]
+        LEDGER.append(entry)
