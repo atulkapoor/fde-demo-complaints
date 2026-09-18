@@ -70,6 +70,51 @@ regenerate (they embed complaint text).
 The recorded interviews, baseline, and implement round log are in this
 repository (`engagements/`, `implement-run.log`).
 
+## Re-run on the 0.1.21 emitter (2026-09-18)
+
+The original deliverable under [`project/`](project/) is the measured
+artefact of the 0.1.8-era emitter and stays as it was. After five
+independent audit passes reshaped what the framework emits (one
+envelope every step reads and writes, an HTTP edge with identity and
+request ids, a boundary that validates every outward URL, a durable
+locked ledger, a hardened unit, and edge tests inside the deliverable),
+the same recorded engagement was built again on **0.1.21** and driven
+through the same implement loop, same holdout, same bar. That run is
+under [`project-0.1.21/`](project-0.1.21/), its round log in
+[`implement-log-0.1.21.md`](implement-log-0.1.21.md).
+
+| | original (0.1.8) | re-run (0.1.21) |
+|---|---|---|
+| Loop | green, round 2 | green, round 2 |
+| Golden (84 visible cases) | 72.6% | **69.0%** |
+| Holdout (30 cases the agent never saw) | 63.3% | **76.7%** |
+| Adversarial layer shipped with the build | 2 probes, 100% | 2 probes, 100% |
+| Bar (`--min-score`) | 0.6 | 0.6 |
+
+Two different agent implementations of the same exam: the re-run scores
+lower on what it could see and materially higher on what it could not,
+which is the direction an exam wants -- the gap between visible and
+unseen narrowed from nine points to minus eight. Neither number beats
+the human baseline's error rate; both runs say so.
+
+Measured after the fact, against the wider exam that 0.1.22 generates
+from the same pairs (the build above shipped with the 0.1.21 exam; the
+probe files embed complaint text and regenerate with `prepare.py` plus a
+0.1.22 build, so only the run's report is committed, at
+[`evals-0.1.22/adversarial-report.json`](evals-0.1.22/adversarial-report.json)):
+the implemented service
+passed all **9 adversarial probes** (three injection framings, a prefix
+injection, empty and whitespace input, an oversized narrative, a wrong
+type, invisible characters) and **3 of 4 edge cases** drawn from the
+data's own extremes of length. Post-measurement, labelled as such.
+
+What a reader gets from `project-0.1.21/` that `project/` never had:
+`app/service.py` (the edge), `app/shapes.py` (the request contract),
+`app/ledger.py` (audit and idempotency that survive a restart),
+`tests/test_edge.py` (the edge defending itself), a boundary that refuses
+an outside endpoint at import, and a unit that stops a refused
+configuration instead of restarting it five times.
+
 ## Transcripts, verbatim
 
 The exam refusing ambiguous ground truth, before any code existed:

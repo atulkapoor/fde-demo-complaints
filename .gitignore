@@ -9,3 +9,7 @@ baseline.yaml
 __pycache__/
 engagements/complaints/artifacts/pairs.jsonl
 engagements/complaints/artifacts/holdout.jsonl
+project-0.1.21/evals/golden.jsonl
+project-0.1.21/evals/edge_case.jsonl
+project-0.1.21/.implement/
+evals-0.1.22/*.jsonl

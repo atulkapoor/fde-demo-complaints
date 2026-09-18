@@ -1,0 +1,19 @@
+{
+  "metrics": [
+    "field_exact_match",
+    "field_coverage"
+  ],
+  "judged": false,
+  "calibration": null,
+  "layers": [
+    {
+      "layer": "holdout",
+      "cases": 9,
+      "score": 1.0,
+      "errors": 0,
+      "by_source": {},
+      "by_field": {},
+      "failures": []
+    }
+  ]
+}
