@@ -70,6 +70,53 @@ regenerate (they embed complaint text).
 The recorded interviews, baseline, and implement round log are in this
 repository (`engagements/`, `implement-run.log`).
 
+## Built again on the 0.1.23 emitter (2026-09-19)
+
+The seventh audit pass re-ran every 0.1.22 check on the build above and
+found them holding, then read the classifier the way an ML engineer
+would: the estimator was mis-specified (long inputs drifted to the
+rarest label; the commonest was recalled once in sixteen on the
+holdout), the golden score was in-sample, the probes and edges were
+drawn from the cases the classifier was fitted on, and a missing golden
+file would have served a constant answer behind a green `/ready`.
+0.1.23 answered each as a check first, and the same engagement was built
+again from the same 150 pairs. That build is under
+[`project-0.1.23/`](project-0.1.23/).
+
+| shipped classifier, no agent | 0.1.22 | 0.1.23 |
+|---|---|---|
+| Holdout (out-of-sample) | 55.6% on 45 cases, majority 35.6% | **69.6%** on 46 cases, majority 41.3% |
+| Golden (in-sample, fitted on this file) | 59.0% | 93.9% |
+| Edge cases | 75% of 4 | 50% of 4 |
+| Adversarial probes | 10 of 11 | 4 of 11 |
+
+Reading it honestly:
+
+- **The holdout is the number.** Fourteen points on cases the classifier
+  never saw, from the same tokens, by switching a Bernoulli scoring rule
+  for a multinomial one -- the audit's own measurement, reproduced. The
+  golden figure rose more because it is in-sample, and the harness now
+  prints that beside it.
+- **The split changed under it.** The holdout is drawn stratified by
+  label and one exact repeat is counted once, so 0.1.22's 45 cases and
+  0.1.23's 46 are different draws; `fde samples` announced the
+  replacement with both digests and the exam record carries the new one.
+- **The probes got harder, not the classifier worse.** They now build on
+  the edge cases -- moved out of golden, so the classifier was not fitted
+  on them -- and two of the four edges are misread un-steered. The
+  harness attributes the seven failures: one injection followed, six
+  answered wrong regardless of the injection because the base case is
+  misread. The one followed injection is the finding to fix; the six are
+  the edge layer's finding, counted where it belongs.
+- **It refuses what it cannot stand behind.** Without `evals/golden.jsonl`
+  the service exits 78 at boot; with a golden file whose digest is not the
+  one in `evals/manifest.json`, the same. Editing the exam no longer edits
+  production silently.
+
+The eval files embed complaint narratives and are not committed; they
+regenerate from `prepare.py` and a 0.1.23 build. The implement loop has
+not been run against this build.
+
 ## Built again on the 0.1.22 emitter (2026-09-18)
 
 The sixth audit pass read the 0.1.21 deliverable and refused to sign
@@ -86,15 +133,17 @@ What is different about this build, before any agent touches it:
 - **It ships a fitted classifier, not a scaffold.** `app/components/reasoning.py`
   names the three labels, fits token log-odds on the golden set at
   import, and decides with a per-label score. Its own scores, no agent
-  involved: golden **59.0%** against a majority rate of 43.8%, edge 75%,
-  holdout **55.6%** against a majority rate of 35.6% -- a baseline the
-  implement loop now has to beat rather than a blank to fill.
+  involved: golden **59.0%** against a majority rate of 43.8% (in-sample:
+  the classifier is fitted on that file), edge 75%, holdout **55.6%**
+  against a majority rate of 35.6% -- a baseline the implement loop now
+  has to beat rather than a blank to fill.
 - **The exam is wider and it steers.** 105 golden, 4 edge cases drawn
   from the data's own extremes, 11 adversarial probes including two that
-  steer toward a wrong label. The shipped classifier followed one of
-  them (10/11), and the harness says so and exits red: the attack layer
-  found a taker. That is the exam doing its job on the reference
-  implementation.
+  steer toward a wrong label. The shipped classifier answered one of
+  them wrongly (10/11), and the harness exited red. The seventh audit
+  pass read that failure more carefully than the harness did: the base
+  case was misread un-steered, so the injection was not followed -- a
+  distinction the 0.1.23 harness now makes itself.
 - **A constant answer is red.** The harness reports per-class precision,
   recall and F1, the confusion and the majority rate, and refuses a
   golden score that does not beat the majority.

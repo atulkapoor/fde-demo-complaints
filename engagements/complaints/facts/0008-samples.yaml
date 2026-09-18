@@ -1,0 +1,10 @@
+session_id: 0008-samples
+respondent:
+  role: system
+  name: null
+facts:
+- dimension: output_shape
+  value: decision
+  provenance: artifact
+  kind: requirement
+  source: sample pairs

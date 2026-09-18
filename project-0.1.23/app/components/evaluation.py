@@ -1,0 +1,96 @@
+# Advisory: decided and recorded at build time -- not a
+# step the payload passes through; the pipeline does not
+# chain this module.
+"""evaluation: labelled-metrics, via plain-python.
+
+Labelled metrics: output_shape == decision
+
+Scored against held-out labels.
+
+**The metric comes from the cost of each error, not from convention.** Where a
+missed case costs a hundred times a false alarm, accuracy is the wrong number
+and will read as healthy while the system fails at the only thing it was for.
+So the cost of each mistake is stated, and the headline figure is the expected
+cost rather than a rate.
+
+Accuracy is still reported, because people ask for it. It is reported alongside
+the class balance, since ninety-five percent on a corpus that is ninety-five
+percent one class is a coin that always says the same thing.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+
+class Evaluation:
+    """Scorer, as labelled-metrics."""
+
+    interface = "Scorer"
+    approach = "labelled-metrics"
+    stack = "plain-python"
+
+    def __init__(
+        self, cost_false_negative: float = 1.0, cost_false_positive: float = 1.0
+    ) -> None:
+        self.cost_false_negative = cost_false_negative
+        self.cost_false_positive = cost_false_positive
+
+    def run(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Score labels by EQUALITY, per class.
+
+        The earlier version tested truthiness -- every class string is
+        truthy, so two wrong decisions scored 100%. Precision and recall
+        are reported per class and macro-averaged; the cost headline needs
+        a `positive_label` to know which errors cost what.
+        """
+        expected = list(payload.get("expected", []))
+        actual = list(payload.get("actual", []))
+        if len(expected) != len(actual):
+            raise ValueError(
+                f"{len(expected)} expected labels against {len(actual)} actual "
+                f"-- a silent truncation would grade a different sample"
+            )
+        pairs = list(zip(expected, actual, strict=True))
+        total = len(pairs) or 1
+        labels = sorted({str(e) for e in expected} | {str(a) for a in actual})
+        per_class: dict[str, dict[str, float]] = {}
+        for label in labels:
+            tp = sum(1 for e, a in pairs if str(e) == label and str(a) == label)
+            fp = sum(1 for e, a in pairs if str(e) != label and str(a) == label)
+            fn = sum(1 for e, a in pairs if str(e) == label and str(a) != label)
+            precision = tp / (tp + fp) if (tp + fp) else 0.0
+            recall = tp / (tp + fn) if (tp + fn) else 0.0
+            f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+            per_class[label] = {
+                "precision": precision, "recall": recall, "f1": f1,
+                "support": tp + fn, "fp": fp, "fn": fn,
+            }
+        macro = {
+            key: (sum(c[key] for c in per_class.values()) / len(per_class)
+                  if per_class else 0.0)
+            for key in ("precision", "recall", "f1")
+        }
+        confusion: dict[str, int] = {}
+        for e, a in pairs:
+            pair = f"{e} -> {a}"
+            confusion[pair] = confusion.get(pair, 0) + 1
+        positive = payload.get("positive_label")
+        cost = None
+        if positive is not None and str(positive) in per_class:
+            stats = per_class[str(positive)]
+            cost = (stats["fn"] * self.cost_false_negative
+                    + stats["fp"] * self.cost_false_positive) / total
+        return {
+            "accuracy": sum(1 for e, a in pairs if e == a) / total,
+            "per_class": per_class,
+            "macro": macro,
+            # Every (expected -> actual) pair with its count: the shape of
+            # the mistakes, which decides the next move.
+            "confusion": confusion,
+            # The headline where errors cost differently -- only when the
+            # caller says which label is the positive one.
+            "expected_cost": cost,
+            "costs": {"false_negative": self.cost_false_negative,
+                      "false_positive": self.cost_false_positive},
+        }
