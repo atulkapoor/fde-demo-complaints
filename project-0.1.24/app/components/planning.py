@@ -1,0 +1,51 @@
+"""planning: fixed-sequence, via plain-python.
+
+Fixed sequence: always
+
+Steps written in advance, by a person, in order.
+
+Every path is enumerable, so every path can be tested and the cost is bounded
+before anything runs. Where the work genuinely has a fixed shape this is not the
+lesser option -- it is the correct one, and reaching past it is how a pipeline
+acquires a control loop it never needed and a bill nobody predicted.
+
+The useful question is never whether this counts as an agent. It is whether the
+next step can depend on the last in a way nobody enumerated. Here it cannot,
+which is exactly what makes it cheap to reason about.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+
+class Planning:
+    """Planner, as fixed-sequence."""
+
+    interface = "Planner"
+    approach = "fixed-sequence"
+    stack = "plain-python"
+
+    def __init__(self, steps: list[tuple[str, Callable[[Any], Any]]] | None = None) -> None:
+        self.steps = steps or []
+
+    def plan(self, goal: str) -> list[str]:
+        """The path, known before anything runs. That is the whole point."""
+        return [name for name, _ in self.steps]
+
+    def paths(self) -> int:
+        """One. Enumerable is not a figure of speech here."""
+        return 1
+
+    def run(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Envelope in, envelope out. Each configured step transforms the
+        envelope in order; the plan records the path taken, which was known
+        before anything ran."""
+        state: dict[str, Any] = payload
+        trace: list[str] = []
+        for name, step in self.steps:
+            state = step(state)
+            trace.append(name)
+        return {**state, "plan": {"steps": self.plan(str(payload.get("goal", ""))),
+                                  "trace": trace, "stopped_because": "sequence_complete"}}

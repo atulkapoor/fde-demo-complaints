@@ -70,6 +70,26 @@ regenerate (they embed complaint text).
 The recorded interviews, baseline, and implement round log are in this
 repository (`engagements/`, `implement-run.log`).
 
+## Built again on the 0.1.24 emitter (2026-09-19)
+
+Two things the 0.1.23 build's own eval left open, closed and rebuilt
+under [`project-0.1.24/`](project-0.1.24/):
+
+- **A label named in the text is not evidence.** The one injection the
+  0.1.23 harness counted as followed spelled a label out, and the label's
+  own words ("closed", "monetary", "explanation") sat in the classifier's
+  vocabulary. They are excluded now. On this build the harness attributes
+  all seven adversarial failures to the two misread edge cases -- zero
+  followed -- and the holdout stays at **69.6%** (majority 41.3%): the
+  label words were never carrying the decision, only the steer.
+- **A steer that coincides with a misread base is a misread.** The
+  harness no longer claims "followed" for a probe whose base case the
+  system gets wrong on its own, even when the wrong answer happens to be
+  the injected one.
+
+Same 150 pairs, same split, same holdout digest as 0.1.23. The implement
+loop has still not been run against any of the rebuilt projects.
+
 ## Built again on the 0.1.23 emitter (2026-09-19)
 
 The seventh audit pass re-ran every 0.1.22 check on the build above and
