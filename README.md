@@ -70,6 +70,32 @@ regenerate (they embed complaint text).
 The recorded interviews, baseline, and implement round log are in this
 repository (`engagements/`, `implement-run.log`).
 
+## Built again on the 0.1.25 emitter (2026-09-19)
+
+The eighth audit pass gave this shape its first sign-off, with
+conditions, and named the one that was the exam's: every probe sat on
+the two shortest inputs, both misread by the baseline, so "0 injections
+followed" measured nothing. 0.1.25 draws probe bases from typical
+cases -- one per label, at the median length -- ships them in the edge
+layer so each is scored un-steered, and rotates the probes across them.
+That build is under [`project-0.1.25/`](project-0.1.25/).
+
+| shipped classifier, no agent | 0.1.24 | 0.1.25 |
+|---|---|---|
+| Holdout (out-of-sample) | 69.6% on 46 cases | **73.9%** on 46 cases, majority 41.3% |
+| Golden (in-sample) | 93.9% | 94.8% on 96 cases |
+| Edge cases | 2 of 4 | 3 of 7 (two extremes and two typical bases misread) |
+| Adversarial probes | 4 of 11, none scorable | 5 of 11; injection measured on one base, not followed |
+
+Reading it honestly: two of the three typical bases are cases this
+baseline misreads un-steered (it is a 74% classifier), so six of the
+seven graded probes are attributed to misreads and one framing was
+measured on the base it gets right. The harness exits red for that
+reason and says so; this engagement's attack layer will stay thin until
+the misreads are fixed by an implementation better than the shipped
+baseline, which is what the implement loop is for. Same 150 pairs, same
+split, same holdout digest as 0.1.23.
+
 ## Built again on the 0.1.24 emitter (2026-09-19)
 
 Two things the 0.1.23 build's own eval left open, closed and rebuilt
