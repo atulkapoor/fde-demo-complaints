@@ -38,3 +38,10 @@ project-0.1.25/evals/adversarial.jsonl
 project-0.1.25/.implement/
 project-0.1.25/harness-report.json
 project-0.1.25/holdout-report.json
+project-0.1.27/evals/golden.jsonl
+project-0.1.27/evals/edge_case.jsonl
+project-0.1.27/evals/adversarial.jsonl
+project-0.1.27/.implement/
+project-0.1.27/harness-report.json
+project-0.1.27/holdout-report.json
+project-0.1.27/scorecard-state/

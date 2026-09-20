@@ -70,6 +70,30 @@ regenerate (they embed complaint text).
 The recorded interviews, baseline, and implement round log are in this
 repository (`engagements/`, `implement-run.log`).
 
+## Built again on the 0.1.27 emitter (2026-09-20)
+
+The scorecard, as of 0.1.27, carries fitness rows -- a generalisation gap,
+the engagement's own error-rate bar, a valid request through the edge --
+and the shipped classifier abstains below a margin. Rebuilt here as
+[`project-0.1.27/`](project-0.1.27/), `fde scorecard project-0.1.27 --holdout ...`
+says **17 of 22 measured properties hold**, and the five that do not are
+the honest state of this engagement:
+
+| Row | Measured |
+|---|---|
+| Holdout, 46 cases never shipped | 73.9%, abstaining 2.2%, 75.6% on the answered (majority 41.3%) |
+| Generalisation gap | golden 94.8% in-sample minus holdout 73.9% = 20.9 points, just past the card's cap |
+| Beats the baseline error rate | no: the demo's stated baseline records a 6% first-pass error rate, so 94% is the bar, and 75.6% on the answered is far from it |
+| Edge cases | 3 of 7 |
+| Adversarial probes | 5 of 11, all six failures attributed to misread bases, none followed |
+
+The reading has not changed since 0.1.25: a 74% three-way classifier with
+a thin attack layer, honestly measured, is what a bag-of-words baseline
+buys on consumer complaints where the label is the company's response
+rather than anything in the narrative. The implement loop has not been
+run on this build; the stated baseline figures are marked stated, not
+measured, on the SLO page.
+
 ## Built again on the 0.1.25 emitter (2026-09-19)
 
 The eighth audit pass gave this shape its first sign-off, with
