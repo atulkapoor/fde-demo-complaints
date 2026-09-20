@@ -41,6 +41,43 @@ holdout included.
   says building with that unknown *is* the answer). Fixed the same day:
   the ladder now asks only while an answer could change what gets built.
 
+## Where it stands (fde 0.1.28)
+
+`fde stage` computes the engagement's stage off the record -- never declared --
+and appended the first transition to
+[`engagements/complaints/lifecycle.jsonl`](engagements/complaints/lifecycle.jsonl):
+
+```
+complaints: pilot
+
+  ok discovery
+       ok a problem statement: Decide each incoming consumer complaint: monetary relief, non-monetary relief, o...
+  ok validation
+       ok the gates pass or are waived on the record: all pass
+       ok the exam is seeded from the client's pairs: 150 pairs
+       ok a holdout the delivery never ships: 46 cases
+       ok data access attested: sqlite complaints.db returned 2,034 real rows (CFPB narratives, redacted at sour
+  ok prototype
+       ok a build with its exam record: project-0.1.27
+  ok pilot
+       ok a scorecard on record: scorecard.json
+       ok the out-of-sample rows hold: 73.9% on 46 cases (majority 41.3%; abstained 2.2%, 75.6% on the answered)
+       ok the edge answers a valid request: 200 "Closed with explanation"
+  -- production
+       NO a deployment on record: none: fde deployed <eng> --note
+       ok no open incident: none open
+  -- adoption
+       NO an adoption figure measured in the field: none: fde outcome <eng> --metric adoption=<share>
+  -- retrospective
+       NO a retrospective captured as a case: none: fde retro
+
+to reach production: a deployment on record -- none: fde deployed <eng> --note
+
+recorded: start -> pilot (lifecycle.jsonl)
+```
+
+The out-of-sample row holds (73.9% on 46 cases, majority 41.3%, abstaining 2.2%, 75.6% on the answered) and the edge answered a valid request, so the record reaches pilot. The next stage needs a deployment attested by name -- the local HTTP run under "Deployed and answering" below was a demonstration, not a deployment, and it is not attested. No drift check has run here; the banking demo is where the whole loop has run in public.
+
 ## Reproduce it
 
 Nothing is redistributed here; everything regenerates from the public API.
