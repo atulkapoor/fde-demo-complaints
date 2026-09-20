@@ -78,6 +78,14 @@ recorded: start -> pilot (lifecycle.jsonl)
 
 The out-of-sample row holds (73.9% on 46 cases, majority 41.3%, abstaining 2.2%, 75.6% on the answered) and the edge answered a valid request, so the record reaches pilot. The next stage needs a deployment attested by name -- the local HTTP run under "Deployed and answering" below was a demonstration, not a deployment, and it is not attested. No drift check has run here; the banking demo is where the whole loop has run in public.
 
+On 0.1.31 the eighth gate, the outcome contract (who owns the number the
+system exists to move, its value today, its target, how it is measured, by
+when), is waived on this record with the reason where a reader will find
+it: no client owns an outcome in a public demonstration, and nobody has set
+a target. `fde debt engagements/complaints` ([`debt.txt`](debt.txt)) lists what
+the engagement rests on that nobody has settled: 9 items: five environment facts said in the interview and never measured, one role never heard, one standing waiver, and two attestations with nobody's name on them. None blocks the
+build or production; the waivers age from today.
+
 ## Reproduce it
 
 Nothing is redistributed here; everything regenerates from the public API.

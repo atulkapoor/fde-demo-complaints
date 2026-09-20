@@ -1,0 +1,33 @@
+$ fde debt engagements/complaints
+complaints: decision debt as of 2026-09-20
+
+  open (9)
+    waiver         outcome_contract: no client owns an outcome: a public demonstration on CFPB complaint data; the baseline's business metric is stated, and nobody has set a target
+                   owner: the author  0 day(s)
+                   next: meet the gate, or restate the waiver if it still holds
+    stated         accelerator = none: said by Atul Kapoor (admin), measurable but not measured
+                   owner: admin
+                   next: measure it: fde scan, or a document the client owns
+    stated         existing_iac_tool = none: said by Atul Kapoor (admin), measurable but not measured
+                   owner: admin
+                   next: measure it: fde scan, or a document the client owns
+    stated         container_competence = False: said by Atul Kapoor (admin), measurable but not measured
+                   owner: admin
+                   next: measure it: fde scan, or a document the client owns
+    stated         existing_cluster = False: said by Atul Kapoor (admin), measurable but not measured
+                   owner: admin
+                   next: measure it: fde scan, or a document the client owns
+    stated         provisioning_api = False: said by Atul Kapoor (admin), measurable but not measured
+                   owner: admin
+                   next: measure it: fde scan, or a document the client owns
+    unsigned       data_access (2026-09-11)
+                   owner: unsigned  9 day(s)
+                   next: re-record with --by, or leave it and know it
+    unsigned       security_review (2026-09-11)
+                   owner: unsigned  9 day(s)
+                   next: re-record with --by, or leave it and know it
+    unheard        skeptic has never been asked
+                   owner: skeptic
+                   next: fde ask <eng> --role skeptic
+
+9 item(s): 0 blocking the build, 0 blocking production, 0 older than 30 days, 2 unsigned
